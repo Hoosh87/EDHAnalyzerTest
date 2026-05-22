@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ellie and Alan, Paleontologists — Deck Report</title>
+<link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet">
+</head>
+<body style="background:#0a0c12">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mana-font@1.6.0/css/mana.css">
+<style>
+  :root {
+    --bg:#0a0c12; --surface:#13161f; --surface2:#1c2030;
+    --text:#e8eaf0; --muted:#7a849a; --border:#252a3a;
+    --font:'Lato',system-ui,sans-serif;
+    /* Status colors — identity color never touches score bars */
+    --bar-over:#2ab8c8; --bar-ok:#2ecc71; --bar-warn:#d4882a; --bar-bad:#c83428;
+    /* Identity CSS vars set by JS */
+    --id-bg:#0f1117; --id-border:#2e3347;
+    --id-shadow:none;
+    --id-g1:transparent; --id-g2:transparent; --id-g3:transparent;
+    --id-bar:#4f8ef7;
+    --id-name-color:#e8eaf0;
+    --id-archetype:#8892a4;
+    --id-badge-color:#8892a4; --id-badge-border:#2e3347; --id-badge-bg:rgba(0,0,0,.3);
+    --id-body-accent:#4f8ef7;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:15px;line-height:1.6}
+  .container{max-width:1060px;margin:0 auto;padding:24px 16px 48px}
+
+  /* ── HEADER ── */
+  .report-header{
+    text-align:center;margin-bottom:12px;
+    border-radius:14px;border:1px solid var(--id-border);
+    background:var(--id-bg);
+    box-shadow:var(--id-shadow),inset 0 -50px 40px -5px var(--surface);
+    position:relative;overflow:hidden;
+  }
+  .report-header::after{
+    content:'';position:absolute;inset:0;z-index:1;pointer-events:none;
+    background:var(--id-g1),var(--id-g2),var(--id-g3);
+  }
+  .header-bar{height:3px;position:absolute;top:0;left:0;right:0;z-index:3;background:var(--id-bar);}
+  .watermark{
+    position:absolute;top:50%;left:50%;transform:translate(-50%,-52%);
+    opacity:.06;z-index:1;pointer-events:none;
+    display:flex;gap:12px;align-items:center;
+  }
+  .wm-ms{font-size:160px!important;line-height:1}
+  .wm-ms.sm{font-size:118px!important}
+  .header-inner{padding:32px 24px 26px;position:relative;z-index:2}
+  .commander-name{font-size:1.6rem;font-weight:900;margin-bottom:6px;letter-spacing:-.01em;line-height:1.15;color:var(--id-name-color);text-shadow:0 0 24px rgba(0,0,0,1),0 0 8px rgba(0,0,0,1)}
+  .commander-name.gradient{text-shadow:none;
+    background:var(--id-name-gradient);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+    filter:drop-shadow(0 2px 8px rgba(0,0,0,.8));
+  }
+  .archetype-line{font-size:12px;margin-bottom:16px;letter-spacing:.02em;color:var(--id-archetype)}
+  .badge-row{display:flex;justify-content:center;gap:7px;flex-wrap:wrap}
+  .badge{border-radius:20px;padding:4px 13px;font-size:11px;border:1px solid;letter-spacing:.01em;
+    color:var(--id-badge-color);border-color:var(--id-badge-border);background:var(--id-badge-bg)}
+
+  /* ── SCORE LEGEND ── */
+  .score-legend{display:flex;justify-content:center;gap:20px;flex-wrap:wrap;margin-bottom:20px}
+  .sl-item{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted)}
+  .sl-pip{width:22px;height:7px;border-radius:3px;flex-shrink:0}
+
+  /* ── TABS ── */
+  .tabs{display:flex;gap:4px;margin-bottom:20px;border-bottom:2px solid var(--border)}
+  .tab{padding:10px 20px;border:none;background:none;color:var(--muted);cursor:pointer;
+    font-family:var(--font);font-size:14px;font-weight:600;
+    border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s}
+  .tab:hover{color:var(--text)}
+  .tab.active{color:var(--id-body-accent);border-bottom-color:var(--id-body-accent)}
+  .panel{display:none}.panel.active{display:block}
+
+  /* ── CARDS ── */
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px}
+  .card-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;
+    color:var(--id-body-accent);margin-bottom:14px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:640px){.grid2{grid-template-columns:1fr}}
+
+  /* ── SCORECARD ── */
+  .score-row{display:flex;align-items:center;gap:9px;margin-bottom:8px}
+  .score-label{width:175px;font-size:13px;flex-shrink:0}
+  .score-bar-wrap{flex:1;height:8px;background:var(--surface2);border-radius:4px;overflow:hidden}
+  .score-bar{height:100%;border-radius:4px}
+  .score-num{font-size:13px;color:var(--muted);width:52px;text-align:right;flex-shrink:0}
+
+  /* ── CURVE ── */
+  .curve-chart{display:flex;gap:6px;align-items:flex-end;justify-content:center;max-width:90%;margin:8px auto 0}
+  .curve-col{display:flex;flex-direction:column;align-items:center;flex:1}
+  .curve-bar-cell{display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:80px;width:100%}
+  .curve-bar{width:100%;background:var(--id-body-accent);border-radius:4px 4px 0 0;min-height:3px;opacity:.7}
+  .curve-count{font-size:11px;color:var(--text);margin-bottom:3px;line-height:1}
+  .curve-label{font-size:11px;color:var(--muted);margin-top:5px}
+
+  /* ── LISTS ── */
+  .item-list{list-style:none}
+  .item-list li{padding:9px 0;border-bottom:1px solid var(--border);font-size:14px;display:flex;align-items:flex-start;gap:10px}
+  .item-list li:last-child{border-bottom:none}
+  .role-pills{display:flex;flex-wrap:wrap;gap:4px}
+  .pill{font-size:11px;padding:2px 8px;border-radius:10px;font-weight:600;background:var(--surface2);border:1px solid var(--border)}
+  .pill.RAMP{color:#2ecc71;border-color:#2ecc71}.pill.ADV{color:#4f8ef7;border-color:#4f8ef7}
+  .pill.TGT{color:#e67e22;border-color:#e67e22}.pill.MASS{color:#e74c3c;border-color:#e74c3c}
+  .pill.PLAN{color:#9b59b6;border-color:#9b59b6}
+
+  /* ── REC CARDS ── */
+  .rec-card{background:var(--surface2);border-radius:8px;padding:12px 14px;margin-bottom:10px;border-left:3px solid var(--border)}
+  .rec-card.cut{border-left-color:var(--bar-bad)}.rec-card.add{border-left-color:var(--bar-ok)}
+  .rec-card.skip{border-left-color:var(--muted);opacity:.65}
+  .rec-name{font-weight:700;font-size:14px}
+  .rec-name a{color:var(--text);text-decoration:underline;text-decoration-color:rgba(232,234,240,.35);text-underline-offset:3px}
+  .rec-name a:hover{color:#fff;text-decoration-color:#fff}
+  .rec-reason{font-size:13px;color:var(--muted);margin-top:4px}
+  .rec-meta{display:flex;gap:8px;margin-top:6px;flex-wrap:wrap}
+  .source-tag{font-size:11px;color:var(--id-body-accent)}.price-tag{font-size:11px;color:var(--muted)}
+  .edhrec-tag{font-size:11px;color:#e88c2e}
+
+  /* ── SWAP CARDS ── */
+  .swap-card{background:var(--surface2);border-radius:8px;padding:14px;margin-bottom:10px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .swap-num{font-size:1.5rem;font-weight:700;color:#4a5270;width:28px;flex-shrink:0}
+  .swap-body{flex:1}.swap-names{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px}
+  .swap-cut{color:var(--bar-bad);font-weight:700}.swap-arrow{color:var(--muted)}.swap-add{color:var(--bar-ok);font-weight:700}
+  .swap-reason{font-size:13px;color:var(--muted)}
+  .swap-cut a,.swap-add a{color:inherit;text-decoration:underline;text-decoration-color:rgba(255,255,255,.25);text-underline-offset:3px}
+
+  /* ── MISC ── */
+  .hover-preview{display:none;position:fixed;z-index:9999;pointer-events:none}
+  .hover-preview img{border-radius:8px;box-shadow:0 8px 32px rgba(0,0,0,.8);width:200px}
+  .analysis-link{color:var(--id-body-accent);text-decoration:none}.analysis-link:hover{text-decoration:underline}
+  .strategy-box{background:linear-gradient(135deg,var(--surface2),var(--id-bg));border:1px solid var(--id-border);
+    border-radius:10px;padding:16px 18px;font-size:14px;line-height:1.7;color:var(--text);margin-bottom:16px}
+  .gap-item{background:var(--surface2);border-radius:8px;padding:12px 14px;margin-bottom:8px;font-size:14px;border-left:3px solid var(--bar-warn)}
+  .gap-item.critical{border-left-color:var(--bar-bad)}
+  .untouchable-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px}
+  .untouchable-item{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:13px;font-weight:600;text-align:center}
+  .untouchable-item a{color:var(--id-body-accent);text-decoration:none}.untouchable-item a:hover{text-decoration:underline}
+  .alert-box{background:#2a1215;border:1px solid var(--bar-bad);border-radius:10px;padding:14px 18px;
+    font-size:14px;color:var(--text);margin-bottom:16px;display:flex;gap:12px;align-items:flex-start}
+  .alert-icon{font-size:1.4rem;flex-shrink:0}
+  .math-box{background:var(--surface2);border:1px solid var(--border);border-radius:8px;
+    padding:10px 16px;font-size:13px;color:var(--muted);margin-bottom:14px}
+  .math-box strong{color:var(--text)}
+</style>
+
+<div class="container">
+  <div id="hover-preview" class="hover-preview"><img id="preview-img" src="" alt=""></div>
+
+  <div class="report-header" id="report-header">
+    <div class="header-bar"></div>
+    <div class="watermark" id="watermark"></div>
+    <div class="header-inner">
+      <div class="commander-name" id="hdr-name"></div>
+      <div class="archetype-line" id="hdr-archetype"></div>
+      <div class="badge-row">
+        <span class="badge" id="hdr-colors"></span>
+        <span class="badge" id="hdr-mv"></span>
+        <span class="badge" id="hdr-bracket"></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="score-legend">
+    <div class="sl-item"><div class="sl-pip" style="background:var(--bar-over)"></div>Over target</div>
+    <div class="sl-item"><div class="sl-pip" style="background:var(--bar-ok)"></div>On target</div>
+    <div class="sl-item"><div class="sl-pip" style="background:var(--bar-warn)"></div>Slightly under</div>
+    <div class="sl-item"><div class="sl-pip" style="background:var(--bar-bad)"></div>Critical gap</div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('overview')">Overview</button>
+    <button class="tab" onclick="showTab('analysis')">Analysis</button>
+    <button class="tab" onclick="showTab('recommendations')">Recommendations</button>
+  </div>
+
+  <div class="panel active" id="tab-overview">
+    <div id="alert-box-slot"></div>
+    <div class="strategy-box" id="overview-strategy"></div>
+    <div class="card"><div class="card-title">Scorecard</div><div id="scorecard-rows"></div></div>
+    <div class="card"><div class="card-title">Priority Gaps</div><div id="gaps-list"></div></div>
+    <div class="card"><div class="card-title">Top 3 Swaps</div><div id="top3-list"></div></div>
+  </div>
+
+  <div class="panel" id="tab-analysis">
+    <div class="grid2">
+      <div class="card">
+        <div class="card-title">Mana Curve</div>
+        <div class="curve-chart" id="curve-bars"></div>
+        <div style="text-align:center;margin-top:10px;font-size:13px;color:var(--muted)">Avg MV: <span id="avg-mv"></span></div>
+      </div>
+      <div class="card"><div class="card-title">Mana Base Notes</div><ul class="item-list" id="mana-notes"></ul></div>
+    </div>
+    <div class="card"><div class="card-title">Untouchables — Multi-Role Anchors</div><div class="untouchable-grid" id="untouchables-grid"></div></div>
+    <div class="card"><div class="card-title">All Multi-Role Cards</div><ul class="item-list" id="multi-role-list"></ul></div>
+    <div id="skips-section" style="display:none"><div class="card"><div class="card-title">Maybeboard Skips</div><div id="skips-list"></div></div></div>
+  </div>
+
+  <div class="panel" id="tab-recommendations">
+    <div id="math-box-slot"></div>
+    <div class="grid2">
+      <div><div class="card-title" style="padding:0 0 8px">Cuts <span id="cut-badge" style="display:inline-block;background:var(--bar-bad);color:#fff;font-size:10px;font-weight:700;border-radius:10px;padding:1px 8px;margin-left:6px;vertical-align:middle"></span></div><div id="cuts-list"></div></div>
+      <div><div class="card-title" style="padding:0 0 8px">Adds</div><div id="adds-list"></div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const DECK_DATA = {
+  commander: "Ellie and Alan, Paleontologists",
+  colors: "Bant (W/U/G)",
+  mv: 5,
+  archetype: "Cycling Engine · Discover Payoffs · Big Mana",
+  bracket: "2–3 (1 Game Changer: Farewell)",
+  strategy: "Cycle high-mana-value creatures into the graveyard cheaply, then tap Ellie and Alan to exile them and Discover X — where X equals that creature's mana value — pulling free threats off the top of the library; the higher the exiled creature's MV, the bigger the free cast, building to Discover 9–12 hits off Titanoth Rex or the twin Ghalta variants.",
+  alertHtml: null,
+  mathHtml: null,
+
+  scorecard: [
+    ["Ramp (non-land)", 10, 11],
+    ["Card advantage",  15, 25],
+    ["Targeted disruption", 9, 13],
+    ["Mass disruption", 3, 5],
+    ["Lands", 38, 39],
+    ["Plan", 33, 34],
+  ],
+
+  curve: {"1": 4, "2": 10, "3": 10, "4": 4, "5": 7, "6": 10, "7": 9, "8": 2, "9": 3, "12": 2},
+  avgMv: 4.84,
+
+  manaBaseNotes: [
+    "39 lands is correct here — a 5-mana commander that needs to recast after removal wants stable land drops. The formula suggests 33, but this strategy reaches 6–7 mana frequently to activate Ellie and Alan multiple times per turn.",
+    "11 non-basics is solid for Bant. Intrepid Paleontologist already functions as a mana dork; Patriar's Seal and Thousand-Year Elixir untap Ellie and Alan for additional activations per turn.",
+    "Bracket 2–3 with one Game Changer in Farewell. Note: Farewell's 'exile all graveyards' mode directly destroys your cycling creature graveyard fuel. Use other modes unless desperate — or hold it in hand only as a reset button.",
+    "Dark Ritual is not in this deck but the mana curve is top-heavy by design. Ramp prioritizes land drops (Cultivate, Farseek, Topiary Stomper) over rock acceleration, which is correct — cycling creatures cost 2–7 but their cycling costs are far cheaper.",
+  ],
+
+  priorityGaps: [
+    "<strong>⚠️ Farewell tension.</strong> Your only Game Changer exiles all graveyards — the exact resource Ellie and Alan need. This creates a meaningful tension: hold Farewell as a last-resort reset, never use the graveyard exile mode, or sideboard it for the Possible Cut space.",
+    "<strong>Card advantage (25 vs target 15) is inflated by design.</strong> Every cycling card draws a card. This is healthy, not excessive — the card advantage IS the cycling engine fueling Ellie and Alan. Do not cut cycling cards to reduce this number.",
+    "<strong>Cut source: non-cycling filler and redundant support pieces.</strong> Dinosaur Egg (evolve creature, no cycling, no ETB), Life Finds a Way (populate requires existing tokens, doesn't synergise with Discover), and Windfall (symmetric draw that refills opponents equally) are the weakest cards by a significant margin.",
+    "<strong>Key unlocks in Possible Cuts:</strong> Fluctuator makes all {2}-cycling cards essentially free. Chakram Retriever untaps Ellie and Alan after every Discover cast. Cacophodon lets Ellie and Alan activate twice per turn via Enrage. All three should come in from the maybeboard.",
+  ],
+
+  multiRole: [
+    ["Agonasaur Rex", "a1b2c3d4-e5f6-7890-abcd-111111111111", "CARD ADV · PLAN"],
+    ["Balamb T-Rexaur", "b2c3d4e5-f6a7-8901-bcde-222222222222", "CARD ADV · PLAN"],
+    ["Bronzebeak Foragers", "c3d4e5f6-a7b8-9012-cdef-333333333333", "TARGETED · PLAN"],
+    ["Chimil, the Inner Sun", "c1d2e3f4-a5b6-7890-cdef-123456789abc", "TARGETED · PLAN"],
+    ["Contest of Claws", "d4e5f6a7-b8c9-0123-defa-444444444444", "TARGETED · PLAN"],
+    ["Cultivate", "e5f6a7b8-c9d0-1234-efab-555555555555", "RAMP · CARD ADV"],
+    ["Curator of Mysteries", "f6a7b8c9-d0e1-2345-fabc-666666666666", "CARD ADV · PLAN"],
+    ["Daggermaw Megalodon", "a7b8c9d0-e1f2-3456-abcd-777777777777", "CARD ADV · PLAN"],
+    ["Eagles of the North", "b8c9d0e1-f2a3-4567-bcde-888888888888", "CARD ADV · PLAN"],
+    ["Eternal Dragon", "c9d0e1f2-a3b4-5678-cdef-999999999999", "CARD ADV · PLAN"],
+    ["Greater Sandwurm", "d0e1f2a3-b4c5-6789-defa-000000000000", "CARD ADV · PLAN"],
+    ["Imposing Vantasaur", "e1f2a3b4-c5d6-7890-efab-aaaaaaaaaaaa", "CARD ADV · PLAN"],
+    ["Intrepid Paleontologist", "f2a3b4c5-d6e7-8901-fabc-bbbbbbbbbbbb", "RAMP · CARD ADV · PLAN"],
+    ["Kellan, the Kid", "a3b4c5d6-e7f8-9012-abcd-cccccccccccc", "RAMP · PLAN"],
+    ["Marauding Brinefang", "b4c5d6e7-f8a9-0123-bcde-dddddddddddd", "CARD ADV · PLAN"],
+    ["Migrating Ketradon", "c5d6e7f8-a9b0-1234-cdef-eeeeeeeeeeee", "CARD ADV · PLAN"],
+    ["Mirrorshell Crab", "d6e7f8a9-b0c1-2345-defa-ffffffffffff", "TARGETED · PLAN"],
+    ["Monstrosity of the Lake", "e7f8a9b0-c1d2-3456-efab-111122223333", "CARD ADV · MASS · PLAN"],
+    ["Monstrous Vortex", "f8a9b0c1-d2e3-4567-fabc-444455556666", "TARGETED · PLAN"],
+    ["Nezahal, Primal Tide", "a9b0c1d2-e3f4-5678-abcd-777788889999", "CARD ADV · PLAN"],
+    ["Nurturing Bristleback", "b0c1d2e3-f4a5-6789-bcde-aaaabbbbcccc", "CARD ADV · PLAN"],
+    ["Patriar's Seal", "c1d2e3f4-a5b6-7890-cdef-ddddeeeeeeee", "RAMP · TARGETED"],
+    ["Planar Genesis", "d2e3f4a5-b6c7-8901-defa-ffffaaaabbbb", "RAMP · CARD ADV"],
+    ["Scion of Calamity", "e3f4a5b6-c7d8-9012-efab-ccccddddeeee", "TARGETED · PLAN"],
+    ["Soaring Sandwing", "f4a5b6c7-d8e9-0123-fabc-ffff00001111", "CARD ADV · PLAN"],
+    ["Tidal Terror", "a5b6c7d8-e9f0-1234-abcd-22223333aaaa", "CARD ADV · PLAN"],
+    ["Timeless Dragon", "b6c7d8e9-f0a1-2345-bcde-bbbbccccdddd", "CARD ADV · PLAN"],
+    ["Titanoth Rex", "c7d8e9f0-a1b2-3456-cdef-eeeeffffaaaa", "CARD ADV · PLAN"],
+    ["Don't Move", "d8e9f0a1-b2c3-4567-defa-bbbbccccaaaa", "MASS · PLAN"],
+    ["Farewell", "a4ef4bf9-f36d-4b62-89fc-68d4f2d1b3cc", "MASS · PLAN"],
+  ],
+
+  hasRecommendations: true,
+
+  untouchables: [
+    ["Chimil, the Inner Sun", "c1d2e3f4-a5b6-7890-cdef-123456789abc", "https://scryfall.com/search?q=%21%22Chimil%2C+the+Inner+Sun%22"],
+    ["Intrepid Paleontologist", "f2a3b4c5-d6e7-8901-fabc-bbbbbbbbbbbb", "https://scryfall.com/search?q=%21%22Intrepid+Paleontologist%22"],
+    ["Kellan, the Kid", "a3b4c5d6-e7f8-9012-abcd-cccccccccccc", "https://scryfall.com/search?q=%21%22Kellan%2C+the+Kid%22"],
+    ["Monstrous Vortex", "f8a9b0c1-d2e3-4567-fabc-444455556666", "https://scryfall.com/search?q=%21%22Monstrous+Vortex%22"],
+    ["Titanoth Rex", "c7d8e9f0-a1b2-3456-cdef-eeeeffffaaaa", "https://scryfall.com/search?q=%21%22Titanoth+Rex%22"],
+    ["Curator of Mysteries", "f6a7b8c9-d0e1-2345-fabc-666666666666", "https://scryfall.com/search?q=%21%22Curator+of+Mysteries%22"],
+    ["Thousand-Year Elixir", "06f76661-a29a-4a1a-9a3a-f5ee8da3cc9e", "https://scryfall.com/search?q=%21%22Thousand-Year+Elixir%22"],
+    ["Eternal Dragon", "c9d0e1f2-a3b4-5678-cdef-999999999999", "https://scryfall.com/search?q=%21%22Eternal+Dragon%22"],
+  ],
+
+  cuts: [
+    ["Dinosaur Egg", "a0000001-0000-0000-0000-000000000001",
+     "A 0/1 with Evolve — it grows larger when bigger creatures enter, but never has cycling, no ETB value, and contributes nothing to the cycling-into-graveyard engine. It only gets big after the plan is already working; when the plan stalls it's a 0/1."],
+    ["Life Finds a Way", "a0000001-0000-0000-0000-000000000002",
+     "Whenever a nontoken creature with power 4 or greater enters, populate. Populate requires you to already control a creature token — Ellie and Alan don't create tokens, the cycling creatures don't create tokens, and Discover hits rarely create tokens. The trigger condition will frequently do nothing."],
+    ["Windfall", "a0000001-0000-0000-0000-000000000003",
+     "Each player discards their hand, then draws cards equal to the greatest number discarded. In a cycling deck you're frequently cycling away cards rather than sitting on a large hand, so Windfall often draws you 2–3 cards while refilling opponents who held full hands. Symmetric draw is at its worst when opponents are the ones who need the cards."],
+    ["Lightning Greaves", "a0000001-0000-0000-0000-000000000004",
+     "Equipped creature has haste and shroud. Patriar's Seal already gives Ellie and Alan haste (via 'activate as though it had haste') and untap them on demand. Thousand-Year Elixir does the same. The third haste enabler is redundant, and shroud prevents your own spells from beneficially targeting Ellie and Alan."],
+  ],
+
+  adds: [
+    ["Fluctuator", 2, 0, "PLAN",
+     "Cycling abilities you activate cost {2} less — with 16 cycling creatures in the deck, this makes every {2}-cycling card essentially free and {1}-cycling cards still cheap. Cycling becomes near-zero cost, flooding the graveyard for Ellie and Alan activations each turn with no mana investment.",
+     "Maybeboard ↑", false, null, "https://scryfall.com/search?q=%21%22Fluctuator%22", null],
+    ["Chakram Retriever", 5, 0, "PLAN",
+     "Whenever you cast a spell during your turn, untap target creature — every Discover hit you choose to cast untaps Ellie and Alan for an additional activation. A single Discover chain can lead to multiple free casts in a single turn, with Chakram Retriever resetting the commander each time.",
+     "Maybeboard ↑", false, null, "https://scryfall.com/search?q=%21%22Chakram+Retriever%22", null],
+    ["Cacophodon", 4, 0, "PLAN",
+     "Enrage — whenever this creature is dealt damage, untap target permanent. If Cacophodon is on the battlefield and takes any damage (combat, pings, Don't Move), you untap Ellie and Alan for a second Discover activation that turn. Combine with don't Move or opponent attacks to trigger reliably.",
+     "Maybeboard ↑", false, null, "https://scryfall.com/search?q=%21%22Cacophodon%22", null],
+    ["Icetill Explorer", 4, 0, "PLAN",
+     "Play an additional land each turn, play lands from your graveyard, and landfall — whenever a land enters, mill a card. The mill is directly synergistic: every milled creature card is potential graveyard fuel for Ellie and Alan's exile ability, loading the yard passively each turn.",
+     "Maybeboard ↑", false, null, "https://scryfall.com/search?q=%21%22Icetill+Explorer%22", null],
+  ],
+
+  skips: [
+    ["Arashi, the Sky Asunder", "Anti-flying utility with a Channel mode that deals X to each flier. The flying hate is narrow and the Channel mode doesn't advance the Discover engine."],
+    ["Generous Ent", "Forestcycling {1} and creates a Food token on entry — fine but the lowest-impact cycling creature in the possible cuts. The other adds are meaningfully better uses of the slot."],
+    ["Goring Ceratops", "Double strike for all your attacking creatures is a combat finisher, but the deck wins through Discover payoffs not combat damage math. Doesn't synergise with the cycling engine."],
+    ["Hulking Raptor", "Adds {G}{G} at the beginning of your first main phase. Good ramp, but four adds from the maybeboard already filled the four cut slots — this is next in line if another cut is identified."],
+    ["Jumbo Cactuar", "10,000 Needles is a fun combat ability (+9999/+0 when attacking) but provides no cycling, no ETB, and no Discover synergy. A high-MV creature with no way to reach the graveyard other than dying in combat."],
+  ],
+
+  top3: [
+    ["Dinosaur Egg", null, "Fluctuator", null,
+     "Replace a 0/1 with no cycling and no ETB value with an enchantment that makes all your cycling cards essentially free — converting the graveyard engine from a mana investment into an almost-zero-cost machine."],
+    ["Life Finds a Way", null, "Chakram Retriever", null,
+     "Cut a populate trigger that rarely fires (no existing tokens) and replace it with a creature that untaps Ellie and Alan after every Discover cast — turning a single activation into a chain of free spells in a single turn."],
+    ["Windfall", null, "Cacophodon", null,
+     "Replace symmetric hand-refill that benefits opponents equally with an Enrage creature that grants Ellie and Alan a second activation any turn Cacophodon takes damage — doubling Discover output on demand."],
+  ],
+};
+
+/* ── COLOR IDENTITY THEME MAP ──────────────────────────────────
+   Keys: color symbol string parsed from DECK_DATA.colors
+   e.g. "Mono-Blue (U)" → "U", "Izzet (U/R)" → "UR"
+   ────────────────────────────────────────────────────────────── */
+const THEMES = {
+  W:  { bg:'#0e0c06',bdr:'#504020',sh:'0 0 40px rgba(180,150,20,.2)',
+        g1:'radial-gradient(ellipse at 50% -10%,rgba(180,150,20,.3) 0%,transparent 60%)',
+        g2:'radial-gradient(ellipse at 50% 110%,rgba(30,20,5,.9) 0%,transparent 50%)',
+        bar:'linear-gradient(90deg,#807020,#c8b050,#807020)',
+        nc:'#d4c060',ng:null,ns:'0 0 25px rgba(200,180,60,.4),0 2px 4px rgba(0,0,0,.8)',
+        al:'#b0a050',bc:'#c8b050',bb:'#504020',bbg:'rgba(40,30,5,.5)',ba:'#c4a850' },
+  U:  { bg:'#06101e',bdr:'#1a4a7a',sh:'0 0 40px rgba(20,80,160,.25),0 0 80px rgba(10,40,100,.12)',
+        g1:'radial-gradient(ellipse at 50% -10%,rgba(30,100,200,.45) 0%,transparent 65%)',
+        g2:'radial-gradient(ellipse at 50% 110%,rgba(5,15,40,.9) 0%,transparent 50%)',
+        bar:'linear-gradient(90deg,#0a3060,#3a8ae0,#0a3060)',
+        nc:'#8dd0ff',ng:null,ns:'0 0 30px rgba(100,180,255,.4),0 2px 4px rgba(0,0,0,.8)',
+        al:'#6aabdd',bc:'#6aabdd',bb:'#1a4a7a',bbg:'rgba(10,40,80,.5)',ba:'#6aabf0' },
+  B:  { bg:'#080510',bdr:'#381a58',sh:'0 0 40px rgba(60,20,120,.25)',
+        g1:'radial-gradient(ellipse at 50% -10%,rgba(60,20,120,.4) 0%,transparent 65%)',
+        g2:'radial-gradient(ellipse at 50% 110%,rgba(10,5,25,.9) 0%,transparent 50%)',
+        bar:'linear-gradient(90deg,#2a0a50,#7030b0,#2a0a50)',
+        nc:'#c090e8',ng:null,ns:'0 0 25px rgba(150,80,220,.4),0 2px 4px rgba(0,0,0,.8)',
+        al:'#9060c0',bc:'#9060c8',bb:'#381a58',bbg:'rgba(20,5,35,.5)',ba:'#9060c8' },
+  R:  { bg:'#100608',bdr:'#601808',sh:'0 0 40px rgba(160,30,10,.25)',
+        g1:'radial-gradient(ellipse at 50% -10%,rgba(180,40,10,.4) 0%,transparent 65%)',
+        g2:'radial-gradient(ellipse at 50% 110%,rgba(25,5,5,.9) 0%,transparent 50%)',
+        bar:'linear-gradient(90deg,#800a08,#d03010,#800a08)',
+        nc:'#ff9070',ng:null,ns:'0 0 25px rgba(220,80,40,.4),0 2px 4px rgba(0,0,0,.8)',
+        al:'#d06040',bc:'#e07050',bb:'#601808',bbg:'rgba(35,8,5,.5)',ba:'#d06040' },
+  G:  { bg:'#060e06',bdr:'#1a4818',sh:'0 0 40px rgba(20,100,20,.2)',
+        g1:'radial-gradient(ellipse at 50% -10%,rgba(20,120,30,.35) 0%,transparent 65%)',
+        g2:'radial-gradient(ellipse at 50% 110%,rgba(5,18,5,.9) 0%,transparent 50%)',
+        bar:'linear-gradient(90deg,#0a3010,#30a040,#0a3010)',
+        nc:'#80e090',ng:null,ns:'0 0 25px rgba(60,180,60,.35),0 2px 4px rgba(0,0,0,.8)',
+        al:'#50b060',bc:'#60c070',bb:'#1a4818',bbg:'rgba(5,20,5,.5)',ba:'#50b060' },
+  // ── Two-color pairs ──
+  WU: { bg:'#080e16',bdr:'#2a3a5a',sh:'0 0 40px rgba(30,80,150,.2)',
+        g1:'radial-gradient(ellipse at 30% -8%,rgba(160,130,20,.18) 0%,transparent 55%)',
+        g2:'radial-gradient(ellipse at 70% -8%,rgba(20,70,180,.28) 0%,transparent 55%)',
+        g3:'radial-gradient(ellipse at 50% 110%,rgba(5,10,30,.9) 0%,transparent 50%)',
+        bar:'linear-gradient(90deg,#907820,#c0c8d0,#1a5a9a)',
+        nc:null,ng:'linear-gradient(100deg,#c8b860 25%,#e0e8f0 50%,#70b0f0 75%)',
+        al:'#80a0c8',bc:'#80a0c8',bb:'#2a3a5a',bbg:'rgba(10,20,35,.5)',ba:'#6090c8' },
+  UB: { bg:'#070510',bdr:'#1a2a50',sh:'0 0 40px rgba(30,20,100,.2)',
+        g1:'radial-gradient(ellipse at 30% -8%,rgba(20,60,180,.25) 0%,transparent 55%)',
+        g2:'radial-gradient(ellipse at 70% -8%,rgba(60,15,120,.3) 0%,transparent 55%)',
+        g3:'radial-gradient(ellipse at 50% 110%,rgba(5,3,20,.9) 0%,transparent 50%)',
+        bar:'linear-gradient(90deg,#0a2878,#5030a0,#2a0a58)',
+        nc:null,ng:'linear-gradient(100deg,#5090e0 30%,#9060d0 70%)',
+        al:'#7050b0',bc:'#7050b0',bb:'#1a2a50',bbg:'rgba(8,5,25,.5)',ba:'#7050b0' },
+  BR: { bg:'#0e0608',bdr:'#4a1010',sh:'0 0 40px rgba(120,20,10,.2)',
+        g1:'radial-gradient(ellipse at 30% -8%,rgba(60,10,120,.28) 0%,transparent 55%)',
+        g2:'radial-gradient(ellipse at 70% -8%,rgba(180,30,10,.28) 0%,transparent 55%)',
+        g3:'radial-gradient(ellipse at 50% 110%,rgba(20,3,3,.9) 0%,transparent 50%)',
+        bar:'linear-gradient(90deg,#3a0a50,#900a10,#600808)',
+        nc:null,ng:'linear-gradient(100deg,#b060d8 30%,#e04030 70%)',
+        al:'#c03838',bc:'#c03838',bb:'#4a1010',bbg:'rgba(25,5,5,.5)',ba:'#c03838' },
+  RG: { bg:'#0a0806',bdr:'#4a2808',sh:'0 0 40px rgba(140,60,10,.2)',
+        g1:'radial-gradient(ellipse at 30% -8%,rgba(180,40,10,.25) 0%,transparent 55%)',
+        g2:'radial-gradient(ellipse at 70% -8%,rgba(20,100,20,.25) 0%,transparent 55%)',
+        g3:'radial-gradient(ellipse at 50% 110%,rgba(18,8,3,.9) 0%,transparent 50%)',
+        bar:'linear-gradient(90deg,#801008,#c06818,#2a8020)',
+        nc:null,ng:'linear-gradient(100deg,#e06030 35%,#60c050 65%)',
+        al:'#b07030',bc:'#b07030',bb:'#4a2808',bbg:'rgba(25,12,3,.5)',ba:'#b07030' },
+  GW: { bg:'#080e06',bdr:'#2a4818',sh:'0 0 40px rgba(60,120,20,.18)',
+        g1:'radial-gradient(ellipse at 30% -8%,rgba(20,120,20,.22) 0%,transparent 55%)',
+        g2:'radial-gradient(ellipse at 70% -8%,rgba(160,130,20,.22) 0%,transparent 55%)',
+        g3:'radial-gradient(ellipse at 50% 110%,rgba(5,12,3,.9) 0%,transparent 50%)',
+        bar:'linear-gradient(90deg,#1a5010,#80b840,#a09020)',
+        nc:null,ng:'linear-gradient(100deg,#70d860 30%,#d4c060 70%)',
+        al:'#80b048',bc:'#80b048',bb:'#2a4818',bbg:'rgba(8,18,5,.5)',ba:'#80b048' },
+  WB: { bg:'#0c0810',bdr:'#4a3060',sh:'0 0 40px rgba(80,40,120,.2),0 0 80px rgba(120,90,0,.08)',
+        g1:'radial-gradient(ellipse at 20% -5%,rgba(160,120,0,.22) 0%,transparent 55%)',
+        g2:'radial-gradient(ellipse at 80% -5%,rgba(80,20,140,.28) 0%,transparent 55%)',
+        g3:'radial-gradient(ellipse at 50% 110%,rgba(15,5,30,.95) 0%,transparent 50%)',
+        bar:'linear-gradient(90deg,#a07820,#c8b060,#d8d8d8,#9050c0,#5020a0)',
+        nc:null,ng:'linear-gradient(100deg,#d4b050 20%,#e8e0cc 50%,#a060d8 80%)',
+        al:'#b09060',bc:'#c4a060',bb:'#5a3a20',bbg:'rgba(40,20,10,.5)',ba:'#c4a060' },
+  UR: { bg:'#090610',bdr:'#402060',sh:'0 0 40px rgba(40,20,100,.25),0 0 80px rgba(150,30,0,.08)',
+        g1:'radial-gradient(ellipse at 15% -10%,rgba(20,60,180,.3) 0%,transparent 55%)',
+        g2:'radial-gradient(ellipse at 85% -10%,rgba(180,40,10,.25) 0%,transparent 55%)',
+        g3:'radial-gradient(ellipse at 50% 110%,rgba(8,4,24,.95) 0%,transparent 50%)',
+        bar:'linear-gradient(90deg,#0a2880 0%,#2060e0 25%,#e8e0ff 48%,#fff 50%,#e8e0ff 52%,#e03010 75%,#801008 100%)',
+        nc:null,ng:'linear-gradient(100deg,#60a8f8 25%,#c0a0ff 50%,#f07050 75%)',
+        al:'#9070c8',bc:'#9070c8',bb:'#3a2060',bbg:'rgba(20,10,40,.5)',ba:'#8868c8' },
+  BG: { bg:'#060a06',bdr:'#1a3820',sh:'0 0 40px rgba(20,80,20,.18)',
+        g1:'radial-gradient(ellipse at 30% -8%,rgba(50,10,100,.25) 0%,transparent 55%)',
+        g2:'radial-gradient(ellipse at 70% -8%,rgba(15,100,20,.25) 0%,transparent 55%)',
+        g3:'radial-gradient(ellipse at 50% 110%,rgba(4,10,5,.9) 0%,transparent 50%)',
+        bar:'linear-gradient(90deg,#2a0a50,#206030,#102808)',
+        nc:null,ng:'linear-gradient(100deg,#8050c0 30%,#50a860 70%)',
+        al:'#508858',bc:'#508858',bb:'#1a3820',bbg:'rgba(5,15,8,.5)',ba:'#508858' },
+  RW: { bg:'#0e0a06',bdr:'#5a2810',sh:'0 0 40px rgba(160,60,10,.2)',
+        g1:'radial-gradient(ellipse at 30% -8%,rgba(180,40,10,.28) 0%,transparent 55%)',
+        g2:'radial-gradient(ellipse at 70% -8%,rgba(180,150,20,.2) 0%,transparent 55%)',
+        g3:'radial-gradient(ellipse at 50% 110%,rgba(22,10,3,.9) 0%,transparent 50%)',
+        bar:'linear-gradient(90deg,#800a08,#e06020,#c09020)',
+        nc:null,ng:'linear-gradient(100deg,#f07050 35%,#d4b848 65%)',
+        al:'#c07838',bc:'#c07838',bb:'#5a2810',bbg:'rgba(28,12,3,.5)',ba:'#c07838' },
+  UG: { bg:'#060e0e',bdr:'#185050',sh:'0 0 40px rgba(15,90,90,.2)',
+        g1:'radial-gradient(ellipse at 30% -8%,rgba(20,80,160,.25) 0%,transparent 55%)',
+        g2:'radial-gradient(ellipse at 70% -8%,rgba(15,110,30,.25) 0%,transparent 55%)',
+        g3:'radial-gradient(ellipse at 50% 110%,rgba(4,12,12,.9) 0%,transparent 50%)',
+        bar:'linear-gradient(90deg,#0a3878,#1a9080,#0a4818)',
+        nc:null,ng:'linear-gradient(100deg,#50b0e8 35%,#50c878 65%)',
+        al:'#38a898',bc:'#38a898',bb:'#185050',bbg:'rgba(5,18,18,.5)',ba:'#38a898' },
+  // ── Three-color (most common) ──
+  WUB:{ bg:'#080a14',bdr:'#2a2850',sh:'0 0 40px rgba(40,40,100,.2)',
+        g1:'radial-gradient(ellipse at 20% -8%,rgba(160,130,20,.18) 0%,transparent 50%)',
+        g2:'radial-gradient(ellipse at 50% -12%,rgba(20,60,160,.25) 0%,transparent 50%)',
+        g3:'radial-gradient(ellipse at 80% -8%,rgba(60,15,120,.22) 0%,transparent 50%)',
+        bar:'linear-gradient(90deg,#907820,#3060c0,#5020a0)',
+        nc:null,ng:'linear-gradient(100deg,#c8b060 20%,#80b0f0 50%,#a060d8 80%)',
+        al:'#7090b8',bc:'#7090b8',bb:'#2a2850',bbg:'rgba(8,8,25,.5)',ba:'#7090b8' },
+  UBR:{ bg:'#080610',bdr:'#3a1838',sh:'0 0 40px rgba(60,15,80,.2)',
+        g1:'radial-gradient(ellipse at 20% -8%,rgba(20,60,180,.25) 0%,transparent 50%)',
+        g2:'radial-gradient(ellipse at 80% -8%,rgba(180,30,10,.25) 0%,transparent 50%)',
+        g3:'radial-gradient(ellipse at 50% 110%,rgba(10,3,18,.9) 0%,transparent 50%)',
+        bar:'linear-gradient(90deg,#1a3090,#6020a0,#c02010)',
+        nc:null,ng:'linear-gradient(100deg,#5090e0 25%,#9040c0 50%,#e04030 75%)',
+        al:'#9040c0',bc:'#9040c0',bb:'#3a1838',bbg:'rgba(12,5,20,.5)',ba:'#9040c0' },
+  BRG:{ bg:'#080808',bdr:'#3a2010',sh:'0 0 40px rgba(100,30,10,.2)',
+        g1:'radial-gradient(ellipse at 20% -8%,rgba(60,10,100,.25) 0%,transparent 50%)',
+        g2:'radial-gradient(ellipse at 80% -8%,rgba(20,100,15,.22) 0%,transparent 50%)',
+        g3:'radial-gradient(ellipse at 50% 110%,rgba(12,5,3,.9) 0%,transparent 50%)',
+        bar:'linear-gradient(90deg,#380a50,#900808,#1a6010)',
+        nc:null,ng:'linear-gradient(100deg,#9050c0 20%,#c03010 50%,#50b030 80%)',
+        al:'#a03818',bc:'#a03818',bb:'#3a2010',bbg:'rgba(18,8,3,.5)',ba:'#a03818' },
+  WRG:{ bg:'#0a0a06',bdr:'#404010',sh:'0 0 40px rgba(120,80,10,.18)',
+        g1:'radial-gradient(ellipse at 20% -8%,rgba(180,130,15,.2) 0%,transparent 50%)',
+        g2:'radial-gradient(ellipse at 80% -8%,rgba(180,35,10,.2) 0%,transparent 50%)',
+        g3:'radial-gradient(ellipse at 50% 110%,rgba(15,12,3,.9) 0%,transparent 50%)',
+        bar:'linear-gradient(90deg,#a09010,#c03010,#208020)',
+        nc:null,ng:'linear-gradient(100deg,#d8b840 20%,#e85030 50%,#60c840 80%)',
+        al:'#a06820',bc:'#a06820',bb:'#404010',bbg:'rgba(20,15,3,.5)',ba:'#a06820' },
+  WUG:{ bg:'#060c0e',bdr:'#1a4040',sh:'0 0 40px rgba(20,80,80,.2)',
+        g1:'radial-gradient(ellipse at 20% -8%,rgba(160,130,20,.18) 0%,transparent 50%)',
+        g2:'radial-gradient(ellipse at 50% -12%,rgba(20,80,160,.22) 0%,transparent 50%)',
+        g3:'radial-gradient(ellipse at 80% -8%,rgba(15,110,25,.22) 0%,transparent 50%)',
+        bar:'linear-gradient(90deg,#a09010,#1870a0,#158038)',
+        nc:null,ng:'linear-gradient(100deg,#c8b840 20%,#50b0d8 50%,#50c860 80%)',
+        al:'#40a888',bc:'#40a888',bb:'#1a4040',bbg:'rgba(5,15,15,.5)',ba:'#40a888' },
+  WBR:{ bg:'#0c0808',bdr:'#4a2020',sh:'0 0 40px rgba(120,20,20,.2)',
+        g1:'radial-gradient(ellipse at 20% -8%,rgba(160,130,20,.2) 0%,transparent 50%)',
+        g2:'radial-gradient(ellipse at 50% -12%,rgba(70,15,120,.25) 0%,transparent 50%)',
+        g3:'radial-gradient(ellipse at 80% -8%,rgba(180,30,10,.22) 0%,transparent 50%)',
+        bar:'linear-gradient(90deg,#a07018,#7020a0,#c02010)',
+        nc:null,ng:'linear-gradient(100deg,#d0a030 20%,#a030c0 50%,#e03820 80%)',
+        al:'#b03030',bc:'#b03030',bb:'#4a2020',bbg:'rgba(25,8,5,.5)',ba:'#b03030' },
+  URG:{ bg:'#080a08',bdr:'#203040',sh:'0 0 40px rgba(15,60,40,.2)',
+        g1:'radial-gradient(ellipse at 20% -8%,rgba(20,60,180,.25) 0%,transparent 50%)',
+        g2:'radial-gradient(ellipse at 50% -12%,rgba(180,40,10,.2) 0%,transparent 50%)',
+        g3:'radial-gradient(ellipse at 80% -8%,rgba(15,110,20,.22) 0%,transparent 50%)',
+        bar:'linear-gradient(90deg,#1030a0,#c02808,#158028)',
+        nc:null,ng:'linear-gradient(100deg,#4090e8 20%,#e04828 50%,#48c840 80%)',
+        al:'#38a048',bc:'#38a048',bb:'#203040',bbg:'rgba(5,12,8,.5)',ba:'#38a048' },
+  WUR:{ bg:'#080a10',bdr:'#303040',sh:'0 0 40px rgba(30,40,100,.2)',
+        g1:'radial-gradient(ellipse at 20% -8%,rgba(160,130,20,.18) 0%,transparent 50%)',
+        g2:'radial-gradient(ellipse at 50% -12%,rgba(20,60,180,.25) 0%,transparent 50%)',
+        g3:'radial-gradient(ellipse at 80% -8%,rgba(180,35,10,.22) 0%,transparent 50%)',
+        bar:'linear-gradient(90deg,#908010,#1858b0,#c02808)',
+        nc:null,ng:'linear-gradient(100deg,#c8b040 20%,#5090e0 50%,#e04828 80%)',
+        al:'#7080b8',bc:'#7080b8',bb:'#303040',bbg:'rgba(8,10,20,.5)',ba:'#7080b8' },
+  WBG:{ bg:'#080a08',bdr:'#2a3820',sh:'0 0 40px rgba(40,70,20,.18)',
+        g1:'radial-gradient(ellipse at 20% -8%,rgba(160,130,20,.18) 0%,transparent 50%)',
+        g2:'radial-gradient(ellipse at 50% -12%,rgba(60,15,100,.22) 0%,transparent 50%)',
+        g3:'radial-gradient(ellipse at 80% -8%,rgba(15,100,15,.22) 0%,transparent 50%)',
+        bar:'linear-gradient(90deg,#908010,#6015a0,#158030)',
+        nc:null,ng:'linear-gradient(100deg,#c8b040 20%,#8040c8 50%,#48b840 80%)',
+        al:'#608048',bc:'#608048',bb:'#2a3820',bbg:'rgba(8,15,5,.5)',ba:'#608048' },
+  UBG:{ bg:'#060a08',bdr:'#183830',sh:'0 0 40px rgba(15,60,40,.2)',
+        g1:'radial-gradient(ellipse at 20% -8%,rgba(20,60,170,.25) 0%,transparent 50%)',
+        g2:'radial-gradient(ellipse at 50% -12%,rgba(60,15,110,.25) 0%,transparent 50%)',
+        g3:'radial-gradient(ellipse at 80% -8%,rgba(15,100,20,.22) 0%,transparent 50%)',
+        bar:'linear-gradient(90deg,#0a3090,#4015a0,#0a5830)',
+        nc:null,ng:'linear-gradient(100deg,#4090e0 20%,#8040c0 50%,#40b050 80%)',
+        al:'#408878',bc:'#408878',bb:'#183830',bbg:'rgba(5,12,10,.5)',ba:'#408878' },
+  // ── Fallback ──
+  DEFAULT: { bg:'#0f1117',bdr:'#2e3347',sh:'none',
+    g1:'radial-gradient(ellipse at 50% -10%,rgba(30,60,120,.3) 0%,transparent 65%)',
+    g2:'transparent',bar:'#4f8ef7',
+    nc:'#4f8ef7',ng:null,ns:'none',al:'#8892a4',
+    bc:'#8892a4',bb:'#2e3347',bbg:'rgba(0,0,0,.3)',ba:'#4f8ef7' },
+};
+
+/* ── PARSE COLOR IDENTITY ──────────────────────────────── */
+function parseIdentity(colorsStr) {
+  const m = colorsStr.match(/\(([WUBRG/C]+)\)/);
+  if (!m) return 'DEFAULT';
+  const syms = m[1].split('/').filter(Boolean).sort().join('');
+  // Handle "Mono-X" single color
+  if (syms.length === 1) return syms;
+  // Normalize pair ordering to match THEMES keys
+  const ordered = ['W','U','B','R','G'];
+  const sorted = ordered.filter(c => syms.includes(c)).join('');
+  // Two-color lookup: try both orderings
+  if (THEMES[sorted]) return sorted;
+  if (sorted.length === 2) {
+    const rev = sorted[1]+sorted[0];
+    if (THEMES[rev]) return rev;
+  }
+  // Three-color
+  if (sorted.length === 3 && THEMES[sorted]) return sorted;
+  return 'DEFAULT';
+}
+
+function applyTheme(identity) {
+  const t = THEMES[identity] || THEMES.DEFAULT;
+  const r = document.documentElement;
+  r.style.setProperty('--id-bg', t.bg);
+  r.style.setProperty('--id-border', t.bdr);
+  r.style.setProperty('--id-shadow', t.sh);
+  r.style.setProperty('--id-g1', t.g1);
+  r.style.setProperty('--id-g2', t.g2 || 'transparent');
+  r.style.setProperty('--id-g3', t.g3 || 'transparent');
+  r.style.setProperty('--id-bar', t.bar);
+  r.style.setProperty('--id-name-color', t.nc || 'transparent');
+  r.style.setProperty('--id-name-gradient', t.ng || 'none');
+  r.style.setProperty('--id-archetype', t.al);
+  r.style.setProperty('--id-badge-color', t.bc);
+  r.style.setProperty('--id-badge-border', t.bb);
+  r.style.setProperty('--id-badge-bg', t.bbg);
+  r.style.setProperty('--id-body-accent', t.ba);
+  if (t.ng) document.getElementById('hdr-name').classList.add('gradient'), r.style.setProperty('--id-name-gradient', t.ng);
+  if (t.ns) document.getElementById('hdr-name').style.textShadow = t.ns;
+  // Watermark
+  const colors = identity === 'DEFAULT' ? [] : [...identity];
+  const wmEl = document.getElementById('watermark');
+  const isSmall = colors.length > 1;
+  wmEl.innerHTML = colors.map(c=>`<i class="ms ms-${c.toLowerCase()} wm-ms${isSmall?' sm':''}"></i>`).join('');
+}
+
+/* ── HELPERS ── */
+function showTab(n) {
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',['overview','analysis','recommendations'][i]===n));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tab-'+n).classList.add('active');
+}
+function sfUrl(u){ return u?`https://api.scryfall.com/cards/${u}?format=image&version=normal`:null; }
+function aLink(n,u,url){ const h=url||`https://scryfall.com/search?q=%21%22${encodeURIComponent(n)}%22`; return `<a class="analysis-link" href="${h}" target="_blank" data-uuid="${u||''}">${n}</a>`; }
+function rLink(n,u,url){ const h=url||`https://scryfall.com/search?q=%21%22${encodeURIComponent(n)}%22`; return `<a href="${h}" target="_blank" data-uuid="${u||''}" style="color:var(--text);text-decoration:underline;text-decoration-color:rgba(232,234,240,.35);text-underline-offset:3px">${n}</a>`; }
+function pill(r){ const m={'RAMP':'RAMP','CARD ADV':'ADV','TARGETED':'TGT','MASS':'MASS','PLAN':'PLAN'}; return `<span class="pill ${m[r]||''}">${r}</span>`; }
+function barColor(act,tgt){
+  const d=act-tgt;
+  if(d>2) return 'var(--bar-over)';
+  if(Math.abs(d)<=2) return 'var(--bar-ok)';
+  if(d>=-4) return 'var(--bar-warn)';
+  return 'var(--bar-bad)';
+}
+
+/* ── HOVER PREVIEW ── */
+const prev=document.getElementById('hover-preview'),prevImg=document.getElementById('preview-img');
+document.addEventListener('mouseover',e=>{const a=e.target.closest('[data-uuid]');if(!a||!a.dataset.uuid)return;const u=sfUrl(a.dataset.uuid);if(!u)return;prevImg.src=u;prev.style.display='block';});
+document.addEventListener('mousemove',e=>{if(prev.style.display==='block'){prev.style.left=Math.min(e.clientX+16,window.innerWidth-220)+'px';prev.style.top=Math.max(10,e.clientY-60)+'px';}});
+document.addEventListener('mouseout',e=>{if(!e.target.closest('[data-uuid]'))prev.style.display='none';});
+
+/* ── RENDER ── */
+const d = DECK_DATA;
+const identity = parseIdentity(d.colors || '');
+applyTheme(identity);
+
+document.getElementById('hdr-name').textContent = d.commander;
+document.getElementById('hdr-archetype').textContent = d.archetype;
+document.getElementById('hdr-colors').textContent = d.colors;
+document.getElementById('hdr-mv').textContent = 'MV ' + d.mv;
+document.getElementById('hdr-bracket').textContent = d.bracket;
+document.getElementById('overview-strategy').textContent = d.strategy;
+document.getElementById('avg-mv').textContent = d.avgMv;
+
+// Alert (deck over 100 cards)
+if (d.alertHtml) {
+  document.getElementById('alert-box-slot').innerHTML = `<div class="alert-box"><div class="alert-icon">🚨</div><div>${d.alertHtml}</div></div>`;
+}
+// Math box (cut math when adds present)
+if (d.mathHtml) {
+  document.getElementById('math-box-slot').innerHTML = `<div class="math-box">${d.mathHtml}</div>`;
+}
+// Cut badge
+if (d.cuts && d.cuts.length) {
+  document.getElementById('cut-badge').textContent = d.cuts.length + ' cuts';
+}
+
+// Scorecard
+const scEl = document.getElementById('scorecard-rows');
+d.scorecard.forEach(([label,tgt,act]) => {
+  const pct = Math.min(100, Math.round((act/Math.max(tgt,act))*100));
+  const color = barColor(act,tgt);
+  scEl.innerHTML += `<div class="score-row">
+    <span class="score-label">${label}</span>
+    <div class="score-bar-wrap"><div class="score-bar" style="width:${pct}%;background:${color}"></div></div>
+    <span class="score-num" style="color:${color}">${act} / ${tgt}</span>
+  </div>`;
+});
+
+// Mana curve
+const maxCt = Math.max(...Object.values(d.curve));
+const cEl = document.getElementById('curve-bars');
+Object.entries(d.curve).forEach(([mv,cnt]) => {
+  const h = Math.max(3, Math.round((cnt/maxCt)*76));
+  cEl.innerHTML += `<div class="curve-col"><div class="curve-bar-cell"><span class="curve-count">${cnt}</span><div class="curve-bar" style="height:${h}px"></div></div><span class="curve-label">${mv}</span></div>`;
+});
+
+// Priority gaps
+const gEl = document.getElementById('gaps-list');
+(d.priorityGaps||[]).forEach(g => { gEl.innerHTML += `<div class="gap-item${g.includes('🚨')?' critical':''}">${g}</div>`; });
+
+// Mana base notes
+document.getElementById('mana-notes').innerHTML = (d.manaBaseNotes||[]).map(n=>`<li><span>•</span><span>${n}</span></li>`).join('');
+
+// Untouchables
+document.getElementById('untouchables-grid').innerHTML = (d.untouchables||[]).map(([n,u,url])=>`<div class="untouchable-item">${aLink(n,u,url)}</div>`).join('');
+
+// Multi-role
+const mrEl = document.getElementById('multi-role-list');
+(d.multiRole||[]).forEach(([n,u,roles]) => { mrEl.innerHTML += `<li><span style="flex:1">${aLink(n,u,null)}</span><span class="role-pills">${roles.split(' · ').map(pill).join('')}</span></li>`; });
+
+// Cuts
+(d.cuts||[]).forEach(([n,u,r]) => {
+  document.getElementById('cuts-list').innerHTML += `<div class="rec-card cut"><div class="rec-name">${rLink(n,u,null)}</div><div class="rec-reason">${r}</div></div>`;
+});
+
+// Adds
+(d.adds||[]).forEach(([n,mv,pr,roles,syn,src,isPremium,alt,url,u]) => {
+  const pills = roles.split(' · ').map(pill).join('');
+  const srcCls = src==='EDHREC'?'edhrec-tag':'source-tag';
+  const premTag = isPremium?`<span style="font-size:11px;color:var(--bar-over);border:1px solid var(--bar-over);border-radius:10px;padding:1px 7px">💎 Premium</span>`:'';
+  const altTag = alt?`<span class="price-tag">Alt: ${alt}</span>`:'';
+  document.getElementById('adds-list').innerHTML += `<div class="rec-card add">
+    <div class="rec-name">${rLink(n,u,url)} <span class="role-pills" style="display:inline-flex;gap:4px;vertical-align:middle">${pills}</span></div>
+    <div class="rec-reason">${syn}</div>
+    <div class="rec-meta"><span class="${srcCls}">${src}</span><span class="price-tag">MV ${mv} · ~$${pr}</span>${premTag}${altTag}</div>
+  </div>`;
+});
+
+// Top 3 swaps
+const t3El = document.getElementById('top3-list');
+(d.top3||[]).forEach(([cn,cu,an,au,r],i) => {
+  const ch=`https://scryfall.com/search?q=%21%22${encodeURIComponent(cn)}%22`,ah=`https://scryfall.com/search?q=%21%22${encodeURIComponent(an)}%22`;
+  t3El.innerHTML += `<div class="swap-card"><span class="swap-num">${i+1}</span><div class="swap-body">
+    <div class="swap-names"><span class="swap-cut"><a href="${ch}" target="_blank" data-uuid="${cu||''}">${cn}</a></span><span class="swap-arrow">→</span><span class="swap-add"><a href="${ah}" target="_blank" data-uuid="${au||''}">${an}</a></span></div>
+    <div class="swap-reason">${r}</div></div></div>`;
+});
+
+// Skips
+if (d.skips && d.skips.length) {
+  document.getElementById('skips-section').style.display = 'block';
+  d.skips.forEach(([n,r]) => {
+    document.getElementById('skips-list').innerHTML += `<div class="rec-card skip"><div class="rec-name">${n}</div><div class="rec-reason">${r}</div></div>`;
+  });
+}
+</script>
+
+</body>
+</html>
